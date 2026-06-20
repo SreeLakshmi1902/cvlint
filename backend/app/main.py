@@ -4,6 +4,10 @@ import tempfile
 from fastapi import FastAPI, UploadFile, File, Form
 from app.parser import extract_docx_text, extract_sections, extract_skills
 from app.job_parser import extract_job_skills, compare_skills
+from app.chunker import create_resume_chunks
+from app.embeddings import find_top_matching_chunks
+from app.bm25_retriever import find_bm25_matches
+from app.hybrid_retriever import combine_scores
 
 app = FastAPI(
     title="CVlint API",
@@ -28,6 +32,10 @@ async def parse_resume(resume: UploadFile = File(...),
 
     resume_text = extract_docx_text(temp_path)
     sections = extract_sections(resume_text)
+    chunks = create_resume_chunks(sections)
+    top_matching_chunks = find_top_matching_chunks(job_desc, chunks)
+    bm25_matches = find_bm25_matches(job_desc, chunks)  
+    hybrid_results = combine_scores(top_matching_chunks, bm25_matches)
     skills = extract_skills(sections)
     job_skills = extract_job_skills(job_desc)
     matched_skills, missing_skills, score = compare_skills(skills, job_skills)
@@ -40,5 +48,9 @@ async def parse_resume(resume: UploadFile = File(...),
         "matched_skills":matched_skills,
         "missing_skills":missing_skills,
         "score":score,
-        "summary": f"{len(matched_skills)} out of {len(job_skills)} job skills matched."
+        "summary": f"{len(matched_skills)} out of {len(job_skills)} job skills matched.",
+        "bm25_matches": bm25_matches,
+        "chunks": chunks,
+        "top_matching_chunks": top_matching_chunks,
+        "hybrid_results": hybrid_results
     }

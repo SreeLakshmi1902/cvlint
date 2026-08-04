@@ -8,6 +8,7 @@ from app.chunker import create_resume_chunks
 from app.embeddings import find_top_matching_chunks
 from app.bm25_retriever import find_bm25_matches
 from app.hybrid_retriever import combine_scores
+from app.critique_agent import generate_critique
 
 app = FastAPI(
     title="CVlint API",
@@ -39,6 +40,7 @@ async def parse_resume(resume: UploadFile = File(...),
     skills = extract_skills(sections)
     job_skills = extract_job_skills(job_desc)
     matched_skills, missing_skills, score = compare_skills(skills, job_skills)
+    critique = generate_critique(job_desc, matched_skills, missing_skills, hybrid_results, sections)
 
     return {
         "filename": resume.filename,
@@ -52,5 +54,6 @@ async def parse_resume(resume: UploadFile = File(...),
         "bm25_matches": bm25_matches,
         "chunks": chunks,
         "top_matching_chunks": top_matching_chunks,
-        "hybrid_results": hybrid_results
+        "hybrid_results": hybrid_results,
+        "llm_critique": critique
     }

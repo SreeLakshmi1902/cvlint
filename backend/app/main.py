@@ -44,16 +44,8 @@ async def parse_resume(resume: UploadFile = File(...),
 
     return {
         "filename": resume.filename,
-        "sections": sections,
-        "skills": skills,
-        "job_skills": job_skills,
         "matched_skills":matched_skills,
         "missing_skills":missing_skills,
         "score":score,
-        "summary": f"{len(matched_skills)} out of {len(job_skills)} job skills matched.",
-        "bm25_matches": bm25_matches,
-        "chunks": chunks,
-        "top_matching_chunks": top_matching_chunks,
-        "hybrid_results": hybrid_results,
         "llm_critique": critique
     }

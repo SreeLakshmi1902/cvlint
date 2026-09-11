@@ -9,11 +9,22 @@ from app.embeddings import find_top_matching_chunks
 from app.bm25_retriever import find_bm25_matches
 from app.hybrid_retriever import combine_scores
 from app.critique_agent import generate_critique
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="CVlint API",
     description="AI-powered Resume Linter",
     version="0.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/")

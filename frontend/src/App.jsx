@@ -27,7 +27,7 @@ function App() {
       formData.append("job_desc", jobDesc)
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/parse-resume",
+        "http://localhost:8000/api/v1/parse-resume",
         {
           method: "POST",
           body: formData

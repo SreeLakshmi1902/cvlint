@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, Field
+from typing import List, Literal
 
 class Strength(BaseModel):
     title:str
@@ -29,3 +29,14 @@ class ResumeCritique(BaseModel):
     missing_skills: List[MissingSkill]
     ats_issues: List[ATSIssues]
     recommendations: List[Recommendation]
+    
+class Requirement(BaseModel):
+    name: str
+    alternatives: list[str] = Field(default_factory=list)
+    category: Literal["technical", "domain", "soft_skill", "qualification", "experience"]
+    importance: Literal["must_have", "nice_to_have"]
+    source_quote: str
+
+class JobRequirements(BaseModel):
+    job_title: str
+    requirements: list[Requirement]

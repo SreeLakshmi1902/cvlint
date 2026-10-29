@@ -1,3 +1,9 @@
 venv/
 __pycache__/
 *.pyc
+
+# Personal resume used for local testing
+backend/tests/fixtures/resume-base.docx
+
+# Temporary check scripts
+backend/check_step*.py

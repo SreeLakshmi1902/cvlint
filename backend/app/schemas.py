@@ -23,12 +23,12 @@ class Recommendation(BaseModel):
     how_to_improve: str
     
 class ResumeCritique(BaseModel):
-    overall_match: str
+    overall_match: Literal["strong", "moderate", "weak", "insufficient"]
     summary: str
     strengths: List[Strength]
     missing_skills: List[MissingSkill]
     ats_issues: List[ATSIssues]
-    recommendations: List[Recommendation]
+    recommendations: List[Recommendation] = Field(min_length=3, max_length=3)
     
 class Requirement(BaseModel):
     name: str

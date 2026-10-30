@@ -26,9 +26,17 @@ IMPLIES = {
     "llms": ["genai"],
 }
 
+GENERIC_WORDS = {"pipeline", "pipelines", "experience", "skills", "framework", "frameworks"}
+
+def strip_generic_words(term: str) -> str:
+    words = term.split()
+    while len(words) > 1 and words[-1] in GENERIC_WORDS:
+        words.pop()
+    return " ".join(words)
+
 def canonical_forms(term: str) -> set[str]:
     term = re.sub(r"\s+", " ", term.lower()).strip().rstrip(".")
-    variants = {term}
+    variants = {term, strip_generic_words(term)}
     inner = re.search(r"\(([^)]+)\)", term)
     if inner:
         variants.add(re.sub(r"\s*\([^)]*\)", "", term).strip())

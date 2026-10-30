@@ -19,6 +19,7 @@ function App() {
     }
     setLoading(true)
     setError("")
+    setResult(null)
 
     try {
       const formData = new FormData()
@@ -35,7 +36,8 @@ function App() {
       )
 
       if (!response.ok) {
-        throw new Error("Failed to analyze resume")
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.detail || "Failed to analyze resume")
       }
 
       const data = await response.json()
@@ -43,7 +45,7 @@ function App() {
 
     } catch (error) {
       console.error(error)
-      setError("Something went wrong while analyzing the resume")
+      setError(error.message)
     } finally {
       setLoading(false)      
     }
@@ -82,7 +84,7 @@ function App() {
       {result && (
         <div>
           <h2>Analysis Results</h2>
-          <p>Score: {result.score}%</p>
+          <p>Technical coverage: {result.score ?? "N/A"}{result.score !== null && "%"}</p>
           <p>
             Overall Match: {result.llm_critique.overall_match}
           </p>
@@ -93,7 +95,7 @@ function App() {
           {result.llm_critique.strengths.map((strength, index) => (
             <div key={index}>
               <h4>{strength.title}</h4>
-              <p>{strength.explantion}</p>
+              <p>{strength.explanation}</p>
               <p>Evidence: {strength.evidence}</p>
             </div>
           ))}

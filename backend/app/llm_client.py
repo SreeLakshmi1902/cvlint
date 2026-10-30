@@ -8,18 +8,8 @@ NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
 
 client = ollama.Client(host=OLLAMA_HOST)
 
-
 class LLMOutputError(Exception):
     """The model could not produce output matching the schema."""
-
-
-def generate_response(prompt: str) -> str:
-    response = client.chat(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response["message"]["content"]
-
 
 def generate_structured(prompt: str, schema: type[BaseModel], max_attempts: int = 2) -> BaseModel:
     messages = [{"role": "user", "content": prompt}]

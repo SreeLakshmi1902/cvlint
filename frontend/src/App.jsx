@@ -1,4 +1,11 @@
 import { useState } from "react"
+import "./App.css"
+
+const STATUS_LABELS = {
+  matched: "Matched",
+  missing: "Missing",
+  needs_review: "Needs review",
+}
 
 function App() {
   const [resume, setResume] = useState(null)
@@ -11,7 +18,7 @@ function App() {
 
     if (!resume) {
       setError("Please upload a resume")
-      return 
+      return
     }
     if (!jobDesc.trim()) {
       setError("Please enter a job description")
@@ -47,7 +54,7 @@ function App() {
       console.error(error)
       setError(error.message)
     } finally {
-      setLoading(false)      
+      setLoading(false)
     }
   }
 
@@ -57,14 +64,14 @@ function App() {
       <p>AI-powered resume analysis</p>
       <div>
         <label>Upload Resume</label>
-        <br /> 
+        <br />
         <input
           type='file'
-          accept=".docx" 
+          accept=".docx"
           onChange={(event) => setResume(event.target.files[0])}
         />
       </div>
-      <br /> 
+      <br />
       <div>
         <label>Job Description</label>
         <br />
@@ -76,27 +83,59 @@ function App() {
           onChange={(event) => setJobDesc(event.target.value)}
         />
       </div>
-      <br /> 
+      <br />
       <button onClick={handleAnalyze} disabled={loading}>
-        { loading ? "Analyzing..." : "Analyze Resume"}
+        {loading ? "Analyzing..." : "Analyze Resume"}
       </button>
       {error && <p>{error}</p>}
       {result && (
-        <div>
+        <div className="results">
+          <br/>
           <h2>Analysis Results</h2>
-          <p>Technical coverage: {result.score ?? "N/A"}{result.score !== null && "%"}</p>
+          <br/>
+          <p><strong>Technical coverage:</strong> {result.score ?? "N/A"}{result.score !== null && "%"}</p>
           <p>
-            Overall Match: {result.llm_critique.overall_match}
+            <strong>Overall Match:</strong> {result.llm_critique.overall_match}
           </p>
           <p>
             {result.llm_critique.summary}
           </p>
+          <h3>Job requirements</h3>
+          <table className="requirements">
+            <thead>
+              <tr>
+                <th>Requirement</th>
+                <th>Importance</th>
+                <th>Status</th>
+                <th>From the job description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.requirements.map((req, index) => (
+                <tr key={index}>
+                  <td>
+                    {req.name}
+                    {req.alternatives.length > 0 && ` (or ${req.alternatives.join(", ")})`}
+                  </td>
+                  <td>{req.importance === "must_have" ? "Must have" : "Nice to have"}</td>
+                  <td>
+                    <span className={`status status-${req.status}`}>{STATUS_LABELS[req.status]}</span>
+                    {req.matched_as && req.matched_as !== req.name && ` (via ${req.matched_as})`}
+                  </td>
+                  <td>
+                    "{req.source_quote}"
+                    {!req.quote_verified && " ⚠ not found in the job description"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           <h3>Strengths</h3>
           {result.llm_critique.strengths.map((strength, index) => (
             <div key={index}>
               <h4>{strength.title}</h4>
               <p>{strength.explanation}</p>
-              <p>Evidence: {strength.evidence}</p>
+              <p><strong>Evidence:</strong> {strength.evidence}</p>
             </div>
           ))}
 
@@ -112,8 +151,8 @@ function App() {
           {result.llm_critique.ats_issues.map((issue, index) => (
             <div key={index}>
               <h4>{issue.issue}</h4>
-              <p>Impact: {issue.impact}</p>
-              <p>How to fix: {issue.fix}</p>
+              <p><strong>Impact:</strong> {issue.impact}</p>
+              <p><strong>How to fix:</strong> {issue.fix}</p>
             </div>
           ))}
 
@@ -121,8 +160,19 @@ function App() {
           {result.llm_critique.recommendations.map((item, index) => (
             <div key={index}>
               <h4>{item.priority}. {item.recommendation}</h4>
-              <p>Why: {item.why}</p>
-              <p>How to improve: {item.how_to_improve}</p>
+              <p><strong>Why:</strong> {item.why}</p>
+              <p><strong>How to improve:</strong> {item.how_to_improve}</p>
+            </div>
+          ))}
+          <h3>Resume evidence used</h3>
+          <p><strong>The critique was based on these resume bullets, chosen by hybrid search as the most relevant to the job.</strong></p>
+          <br/>
+          {result.evidence.map((item) => (
+            <div key={item.id} className="evidence">
+              <p>
+                <strong className="evidence-id">[{item.id}]</strong> {item.context && <em>{item.context}</em>}
+              </p>
+              <p>{item.text}</p>
             </div>
           ))}
         </div>

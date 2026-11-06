@@ -16,9 +16,14 @@ def strip_bullet(text:str) -> tuple[str, bool]:
         return text[match.end():], True
     return text, False
 
+def has_numbering(ppr) -> bool:
+    return ppr is not None and ppr.numPr is not None
+
 def is_word_bullet(paragraph) -> bool:
-    ppr = paragraph._p.pPr
-    return ppr is not None and ppr.numPr is not None   
+    if has_numbering(paragraph._p.pPr):
+        return True
+    style = paragraph.style
+    return style is not None and has_numbering(style.element.pPr)
 
 def extract_docx_lines(files_path:str | BinaryIO) -> list[dict]:
     document = Document(files_path)

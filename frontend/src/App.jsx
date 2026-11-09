@@ -67,7 +67,7 @@ function App() {
         <br />
         <input
           type='file'
-          accept=".docx"
+          accept=".docx, .pdf"
           onChange={(event) => setResume(event.target.files[0])}
         />
       </div>

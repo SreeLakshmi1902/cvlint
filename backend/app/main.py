@@ -2,7 +2,7 @@ import os
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 
-from app.parser import extract_docx_lines, build_sections, extract_skill_list
+from app.parser import extract_docx_lines, extract_pdf_lines, build_sections, extract_skill_list
 from app.chunker import create_bullet_chunks
 from app.hybrid_retriever import hybrid_search
 from app.requirement_extractor import extract_requirements, verify_quotes
@@ -11,7 +11,11 @@ from app.critique_agent import generate_evidence_critique
 from app.llm_client import LLMOutputError
 from fastapi.middleware.cors import CORSMiddleware
 
-ALLOWED_EXTENSIONS = {".docx"}
+LINE_READERS = {
+    ".docx" : extract_docx_lines,
+    ".pdf" : extract_pdf_lines
+}
+
 EVIDENCE_CHUNKS = 6
 
 app = FastAPI(
@@ -36,13 +40,13 @@ def root():
 
 def read_uploaded_resume(resume: UploadFile) -> list[dict]:
     suffix = os.path.splitext(resume.filename or "")[1].lower()
-    if suffix not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="Only .docx resumes are supported")
-
+    reader = LINE_READERS.get(suffix)
+    if reader is None:
+        raise HTTPException(status_code=400, detail="Only .docx and .pdf resumes are supported")
     try:
-        return extract_docx_lines(resume.file)
+        return reader(resume.file)
     except Exception as error:
-        raise HTTPException(status_code=400, detail="Could not read this .docx file") from error   
+        raise HTTPException(status_code=400, detail="Could not read this {suffix} file") from error   
     
 @app.post("/api/v1/parse-resume")
 def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
@@ -52,7 +56,7 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
     sections = build_sections(read_uploaded_resume(resume))
     chunks = create_bullet_chunks(sections)
     if not chunks:
-        raise HTTPException(status_code=422, detail="No resume content could be found in this file")
+        raise HTTPException(status_code=422, detail="No resume content could be found in this file. Scanned PDFs (images of text are not supported)")
     
     resume_skills = extract_skill_list(sections)
     resume_text = " ".join(chunk["search_text"] for chunk in chunks)

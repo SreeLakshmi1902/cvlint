@@ -1,6 +1,9 @@
 import re
 from docx import Document
 from typing import BinaryIO
+from collections import Counter
+
+import pdfplumber
 
 BULLET_PATTERN = re.compile(
     r"^(?:"
@@ -45,6 +48,62 @@ def extract_docx_lines(files_path:str | BinaryIO) -> list[dict]:
                 "style": style,
             })
     return lines  
+
+def is_bold(char: dict) -> bool:
+    return "bold" in char["fontname"].lower()
+
+def read_pdf_visual_lines(file: str | BinaryIO) -> list[dict]:
+    visual_lines = []
+    with pdfplumber.open(file) as pdf:
+        for page in pdf.pages:
+            for line in page.extract_text_lines():
+                chars = [char for char in line["chars"] if char["text"].strip()]
+                if not chars:
+                    continue
+                visual_lines.append({
+                    "text": re.sub(r"\s+", " ", line["text"]).strip(),
+                    "size": round(max(char["size"] for char in chars), 1),
+                    "starts_bold": is_bold(chars[0]),
+                    "ends_bold": is_bold(chars[-1]),
+                    "x0": line["x0"],
+                    "x1": line["x1"],
+                })
+    return visual_lines
+
+FULL_LINE_RATIO = 0.85
+INDENT_TOLERANCE = 2
+
+def merge_visual_lines(visual_lines: list[dict]) -> list[dict]:
+    if not visual_lines:
+        return []
+    body_size = Counter(v["size"] for v in visual_lines).most_common(1)[0][0]
+    right_edge = max(v["x1"] for v in visual_lines)
+
+    lines = []
+    previous = None
+    for current in visual_lines:
+        text, is_bullet = strip_bullet(current["text"])
+        continues_previous = (
+            previous is not None
+            and not is_bullet
+            and current["size"] == previous["size"]
+            and previous["x1"] >= FULL_LINE_RATIO * right_edge
+            and current["x0"] >= previous["x0"] - INDENT_TOLERANCE
+            and current["starts_bold"] == previous["ends_bold"]
+        )
+        if continues_previous:
+            lines[-1]["text"] += " " + text
+        else:
+            lines.append({
+                "text": text,
+                "is_bullet": is_bullet,
+                "style": "heading" if current["size"] > body_size else "normal",
+            })
+        previous = current
+    return lines
+
+def extract_pdf_lines(file: str | BinaryIO) -> list[dict]:
+    return merge_visual_lines(read_pdf_visual_lines(file))
 
 SECTION_ALIASES = {
     "summary": "summary", "professional summary": "summary", "profile": "summary",

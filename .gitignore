@@ -4,6 +4,7 @@ __pycache__/
 
 # Personal resume used for local testing
 backend/tests/fixtures/resume-base.docx
+backend/tests/fixtures/resume-base.pdf
 
 # Temporary check scripts
 backend/check_step*.py

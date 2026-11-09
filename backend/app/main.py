@@ -1,4 +1,5 @@
 import os
+import logging
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 
@@ -10,6 +11,11 @@ from app.skill_matcher import match_requirements
 from app.critique_agent import generate_evidence_critique
 from app.llm_client import LLMOutputError
 from fastapi.middleware.cors import CORSMiddleware
+
+from timing import StepTimer
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+
 
 LINE_READERS = {
     ".docx" : extract_docx_lines,
@@ -46,27 +52,38 @@ def read_uploaded_resume(resume: UploadFile) -> list[dict]:
     try:
         return reader(resume.file)
     except Exception as error:
-        raise HTTPException(status_code=400, detail="Could not read this {suffix} file") from error   
+        raise HTTPException(status_code=400, detail=f"Could not read this {suffix} file") from error   
     
 @app.post("/api/v1/parse-resume")
 def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
+    timer = StepTimer()
     if not job_desc.strip():
         raise HTTPException(status_code=400, detail="Please provide a job description")
     
-    sections = build_sections(read_uploaded_resume(resume))
-    chunks = create_bullet_chunks(sections)
+    with timer.step("read_uploaded_resume"):
+        lines = read_uploaded_resume(resume)
+    with timer.step("build_sections"):
+        sections = build_sections(lines)
+    with timer.step("create_bullet_chunks"):
+        chunks = create_bullet_chunks(sections)
     if not chunks:
         raise HTTPException(status_code=422, detail="No resume content could be found in this file. Scanned PDFs (images of text are not supported)")
     
-    resume_skills = extract_skill_list(sections)
+    with timer.step("extract_skill_list"):
+        resume_skills = extract_skill_list(sections)
     resume_text = " ".join(chunk["search_text"] for chunk in chunks)
 
     try : 
-        job = extract_requirements(job_desc)
-        requirements = verify_quotes(job, job_desc)
-        match_result = match_requirements(requirements, resume_skills, resume_text)
-        evidence = hybrid_search(job_desc, chunks, top_k=EVIDENCE_CHUNKS)
-        critique = generate_evidence_critique(job_desc, match_result, evidence, sections)
+        with timer.step("extract_requirements"):
+            job = extract_requirements(job_desc)
+        with timer.step("verify_quotes"):
+            requirements = verify_quotes(job, job_desc)
+        with timer.step("match_requirements"):
+            match_result = match_requirements(requirements, resume_skills, resume_text)
+        with timer.step("hybrid_search"):
+            evidence = hybrid_search(job_desc, chunks, top_k=EVIDENCE_CHUNKS)
+        with timer.step("generate_evidence_critique"):
+            critique = generate_evidence_critique(job_desc, match_result, evidence, sections)
     except LLMOutputError as error:
         raise HTTPException(status_code=502, detail="The AI model returned an invalid response. Please try again") from error
     except ConnectionError as error: 
@@ -81,5 +98,6 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
         "needs_review": match_result["needs_review"],
         "requirements": match_result["requirements"],
         "evidence": [{key: chunk[key] for key in ("id", "section", "context", "text", "rrf_score")} for chunk in evidence],
-        "llm_critique": critique
+        "llm_critique": critique,
+        "timings": timer.summary()
     }

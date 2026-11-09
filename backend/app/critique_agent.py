@@ -71,4 +71,4 @@ def generate_evidence_critique(job_description: str, match_result: dict,
     - Prefer evidence from experience and project bullets. Use the summary only when no other evidence exists, because the summary is the candidate's own claim.
     - Only recommend adding a keyword to the resume if the evidence shows the candidate already has that skill. For skills with no evidence, recommend building a project that uses them instead.
     """
-    return generate_structured(prompt, ResumeCritique).model_dump()
+    return generate_structured(prompt, ResumeCritique, label="generate_evidence_critique").model_dump()

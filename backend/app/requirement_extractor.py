@@ -21,7 +21,7 @@ JOB DESCRIPTION:
 
 def extract_requirements(job_description: str) -> JobRequirements:
     prompt = EXTRACTION_PROMPT.format(job_description=job_description)
-    return generate_structured(prompt, JobRequirements)
+    return generate_structured(prompt, JobRequirements, label="extract_requirements")
 
 def normalize_text(text: str) -> str:
     return " ".join(text.lower().split())

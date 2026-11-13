@@ -8,7 +8,7 @@ from app.chunker import create_bullet_chunks
 from app.hybrid_retriever import hybrid_search
 from app.requirement_extractor import extract_requirements, verify_quotes
 from app.skill_matcher import match_requirements
-from app.critique_agent import generate_evidence_critique
+from app.critique_agent import generate_evidence_critique, generate_compact_critique
 from app.llm_client import LLMOutputError
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,6 +23,7 @@ LINE_READERS = {
 }
 
 EVIDENCE_CHUNKS = 6
+CRITIQUE_MODE = os.getenv("CVLINT_CRITIQUE", "full")
 
 app = FastAPI(
     title="CVlint API",
@@ -82,8 +83,12 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
             match_result = match_requirements(requirements, resume_skills, resume_text)
         with timer.step("hybrid_search"):
             evidence = hybrid_search(job_desc, chunks, top_k=EVIDENCE_CHUNKS)
-        with timer.step("generate_evidence_critique"):
-            critique = generate_evidence_critique(job_desc, match_result, evidence, sections)
+        if CRITIQUE_MODE == "compact":
+            with timer.step("generate_compact_critique"):
+                critique = generate_compact_critique(job.job_title, match_result, evidence, sections)
+        else:
+            with timer.step("generate_evidence_critique"):
+                critique = generate_evidence_critique(job_desc, match_result, evidence, sections)
     except LLMOutputError as error:
         raise HTTPException(status_code=502, detail="The AI model returned an invalid response. Please try again") from error
     except ConnectionError as error: 
@@ -99,5 +104,6 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
         "requirements": match_result["requirements"],
         "evidence": [{key: chunk[key] for key in ("id", "section", "context", "text", "rrf_score")} for chunk in evidence],
         "llm_critique": critique,
-        "timings": timer.summary()
+        "timings": timer.summary(),
+        "critique_mode": CRITIQUE_MODE
     }

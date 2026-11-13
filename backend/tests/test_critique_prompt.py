@@ -1,4 +1,5 @@
 from app.critique_agent import build_compact_prompt
+from app.critique_agent import clean_evidence_ids
 
 MATCH_RESULT = {"requirements": [
     {"name": "Python", "alternatives": [], "category": "technical",
@@ -18,3 +19,12 @@ def test_each_requirement_has_one_line_with_its_status():
 def test_prompt_lines_are_not_indented():
     prompt = build_compact_prompt("AI Engineer", MATCH_RESULT, [], {})
     assert not any(line.startswith("    ") for line in prompt.splitlines())
+    
+def test_brackets_are_stripped_from_evidence_ids():
+    critique = {
+        "strengths": [{"point": "x", "evidence_ids": ["[education_2]", "experience_1"]}],
+        "weak_areas": [{"point": "y", "evidence_ids": []}],
+    }
+    cleaned = clean_evidence_ids(critique)
+    assert cleaned["strengths"][0]["evidence_ids"] == ["education_2", "experience_1"]
+    assert cleaned["weak_areas"][0]["evidence_ids"] == []

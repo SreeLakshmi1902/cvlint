@@ -90,7 +90,7 @@ RESUME BULLETS (each has an ID in square brackets):
 Write a short critique:
 - overall_match: strong, moderate, weak or insufficient.
 - summary: 2 sentences.
-- strengths: up to 3. Each point is one sentence. evidence_ids lists 1-2 bullet IDs that support it.
+- strengths: up to 3. Each point is one sentence. evidence_ids lists 1-2 bullet IDs that support it, written without brackets, e.g. experience_3. 
 - weak_areas: up to 3, for requirements marked "needs judgment" or with thin evidence. One sentence each, citing bullet IDs if any.
 - recommendations: exactly 3, priorities 1 to 3. action and why are one sentence each.
 
@@ -118,7 +118,14 @@ def build_compact_prompt(job_title: str, match_result: dict,
         bullets=build_evidence_block(evidence_chunks),
     )
 
+def clean_evidence_ids(critique: dict) -> dict:
+    for section in ("strengths", "weak_areas"):
+        for item in critique[section]:
+            item["evidence_ids"] = [eid.strip().strip("[]") for eid in item["evidence_ids"]]
+    return critique
+
 def generate_compact_critique(job_title: str, match_result: dict,
                               evidence_chunks: list[dict], sections: dict) -> dict:
     prompt = build_compact_prompt(job_title, match_result, evidence_chunks, sections)
-    return generate_structured(prompt, CompactCritique, label="generate_compact_critique").model_dump()
+    critique = generate_structured(prompt, CompactCritique, label="generate_compact_critique").model_dump()
+    return clean_evidence_ids(critique)

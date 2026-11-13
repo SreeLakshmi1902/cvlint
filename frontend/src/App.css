@@ -56,3 +56,16 @@
 .evidence-id{
   color: var(--text-h);
 }
+
+.critique-point {
+  margin: 16px 0;
+}
+
+.critique-point h4 {
+  margin: 0 0 4px;
+  color: var(--text-h);
+}
+
+.unverified {
+  color: #b42318;
+}

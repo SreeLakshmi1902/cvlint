@@ -7,6 +7,28 @@ const STATUS_LABELS = {
   needs_review: "Needs review",
 }
 
+function CritiquePoints({ items, evidenceById }) {
+  if (items.length === 0) return <p><em>None identified.</em></p>
+  return items.map((item, index) => (
+    <div key={index} className="critique-point">
+      <p>{item.point}</p>
+      {item.evidence_ids.map((id, idIndex) => {
+        const bullet = evidenceById[id]
+        return (
+          <div key={`${id}-${idIndex}`} className="evidence">
+            <p>
+              <strong className="evidence-id">[{id}]</strong>{" "}
+              {bullet
+                ? bullet.text
+                : <em className="unverified">Not among the bullets shown to the model</em>}
+            </p>
+          </div>
+        )
+      })}
+    </div>
+  ))
+}
+
 function App() {
   const [resume, setResume] = useState(null)
   const [jobDesc, setJobDesc] = useState("")
@@ -57,6 +79,9 @@ function App() {
       setLoading(false)
     }
   }
+  const evidenceById = result
+    ? Object.fromEntries(result.evidence.map((item) => [item.id, item]))
+    : {}
 
   return (
     <div>
@@ -124,46 +149,26 @@ function App() {
                   </td>
                   <td>
                     "{req.source_quote}"
-                    {!req.quote_verified && " ⚠ not found in the job description"}
+                    {!req.quote_verified && <em className="unverified"> Not found in the job description</em>}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           <h3>Strengths</h3>
-          {result.llm_critique.strengths.map((strength, index) => (
-            <div key={index}>
-              <h4>{strength.title}</h4>
-              <p>{strength.explanation}</p>
-              <p><strong>Evidence:</strong> {strength.evidence}</p>
-            </div>
-          ))}
+          <CritiquePoints items={result.llm_critique.strengths} evidenceById={evidenceById} />
 
-          <h3>Missing skills</h3>
-          {result.llm_critique.missing_skills.map((item, index) => (
-            <div key={index}>
-              <h4>{item.skill}</h4>
-              <p>{item.why_it_matters}</p>
-            </div>
-          ))}
-
-          <h3>ATS Issues</h3>
-          {result.llm_critique.ats_issues.map((issue, index) => (
-            <div key={index}>
-              <h4>{issue.issue}</h4>
-              <p><strong>Impact:</strong> {issue.impact}</p>
-              <p><strong>How to fix:</strong> {issue.fix}</p>
-            </div>
-          ))}
+          <h3>Weak areas</h3>
+          <CritiquePoints items={result.llm_critique.weak_areas} evidenceById={evidenceById} />
 
           <h3>Recommendations</h3>
           {result.llm_critique.recommendations.map((item, index) => (
-            <div key={index}>
-              <h4>{item.priority}. {item.recommendation}</h4>
+            <div key={index} className="critique-point">
+              <h4>{item.priority}. {item.action}</h4>
               <p><strong>Why:</strong> {item.why}</p>
-              <p><strong>How to improve:</strong> {item.how_to_improve}</p>
             </div>
           ))}
+          
           <h3>Resume evidence used</h3>
           <p><strong>The critique was based on these resume bullets, chosen by hybrid search as the most relevant to the job.</strong></p>
           <br/>

@@ -9,7 +9,7 @@ from app.hybrid_retriever import hybrid_search
 from app.requirement_extractor import extract_requirements, verify_quotes
 from app.skill_matcher import match_requirements
 from app.critique_agent import generate_compact_critique
-from app.llm_client import LLMOutputError
+from app.llm_client import LLMOutputError, LLMProviderError
 from fastapi.middleware.cors import CORSMiddleware
 
 from timing import StepTimer
@@ -89,6 +89,9 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
         raise HTTPException(status_code=502, detail="The AI model returned an invalid response. Please try again") from error
     except ConnectionError as error: 
         raise HTTPException(status_code=503, detail="The AI model is not reachable. Is Ollama running?") from error
+    except LLMProviderError as error:
+        logging.getLogger("cvlint").error("LLM provider error: %s", error)
+        raise HTTPException(status_code=503, detail="The AI model provider returned an error. Please try again later") from error
     
     return {
         "filename": resume.filename,

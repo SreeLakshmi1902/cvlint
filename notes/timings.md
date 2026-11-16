@@ -22,3 +22,11 @@ Same resume (Resume-Deloitte.pdf) and job description (labels/01) for all runs.
 - Critique prompt tokens: 1661 -> 1314 (-21%)
 - Whole analysis: ~8.1 min -> ~4.2 min
 - Note: seconds vary between runs (a repeat compact run took 393 s total); token counts are the stable comparison.
+
+## Mon 16 Nov: Bedrock (openai.gpt-oss-20b-1:0, ap-southeast-2, reasoning_effort=low)
+
+- extract_requirements: 2.7 s (in 670 tok, out 399 tok incl. reasoning)
+- hybrid_search: 1.7 s
+- generate_compact_critique: 1.8 s (in 1786 tok, out 418 tok incl. reasoning)
+- Total: 7.4 s (vs ~484 s baseline; ~65x faster)
+- No validation retries; quality closer to label 01 (communication found, 2+ years captured)

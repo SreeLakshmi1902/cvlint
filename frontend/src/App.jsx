@@ -170,7 +170,7 @@ function App() {
           ))}
           
           <h3>Resume evidence used</h3>
-          <p><strong>The critique was based on these resume bullets, chosen by hybrid search as the most relevant to the job.</strong></p>
+          <p><strong>The critique was based on these resume bullets, found by searching the resume for each requirement.</strong></p>
           <br/>
           {result.evidence.map((item) => (
             <div key={item.id} className="evidence">

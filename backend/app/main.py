@@ -5,12 +5,12 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 
 from app.parser import extract_docx_lines, extract_pdf_lines, build_sections, extract_skill_list
 from app.chunker import create_bullet_chunks
-from app.hybrid_retriever import hybrid_search
 from app.requirement_extractor import extract_requirements, verify_quotes
 from app.skill_matcher import match_requirements
 from app.critique_agent import generate_compact_critique
 from app.llm_client import LLMOutputError, LLMProviderError
 from fastapi.middleware.cors import CORSMiddleware
+from app.evidence import retrieve_evidence, collect_evidence
 
 from timing import StepTimer
 
@@ -80,8 +80,9 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
             requirements = verify_quotes(job, job_desc)
         with timer.step("match_requirements"):
             match_result = match_requirements(requirements, resume_skills, resume_text)
-        with timer.step("hybrid_search"):
-            evidence = hybrid_search(job_desc, chunks, top_k=EVIDENCE_CHUNKS)
+        with timer.step("retrieve_evidence"):
+            requirements = retrieve_evidence(match_result["requirements"], chunks)
+            evidence = collect_evidence(requirements, chunks)
         with timer.step("generate_compact_critique"):
             critique = generate_compact_critique(job.job_title, match_result, evidence, sections)
         
@@ -100,8 +101,8 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
         "matched_skills":match_result["matched"],
         "missing_skills":match_result["missing"],
         "needs_review": match_result["needs_review"],
-        "requirements": match_result["requirements"],
-        "evidence": [{key: chunk[key] for key in ("id", "section", "context", "text", "rrf_score")} for chunk in evidence],
+        "requirements": requirements,
+        "evidence": [{key: chunk[key] for key in ("id", "section", "context", "text")} for chunk in evidence],
         "llm_critique": critique,
         "timings": timer.summary()
     }

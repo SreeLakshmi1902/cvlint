@@ -23,7 +23,7 @@ def encode_chunks(texts: list[str]) -> np.ndarray:
 def rank_chunks_by_embedding(query: str, chunks: list[dict], top_k: int | None = None) -> list[dict]:
     if not chunks:
         return []
-    query_vector = _get_model.encode([QUERY_INSTRUCTION + query], normalize_embeddings=True)[0]
+    query_vector = _get_model().encode([QUERY_INSTRUCTION + query], normalize_embeddings=True, show_progress_bar=False)[0]
     chunk_vectors = encode_chunks([chunk["search_text"] for chunk in chunks])
     scores = chunk_vectors @ query_vector
     ranked = [

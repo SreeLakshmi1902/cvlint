@@ -32,19 +32,19 @@ def test_each_requirement_gets_its_own_search(monkeypatch):
     ]
     results = evidence.retrieve_evidence(requirements, CHUNKS, per_requirement=2)
     assert queries == ["Python", "Docker"]
-    assert results[0]["evidence_ids"] == ["summary_1", "experience_1"]
+    assert results[0]["candidate_ids"] == ["summary_1", "experience_1"]
 
 def test_skipped_sections_are_never_evidence(monkeypatch):
     monkeypatch.setattr(evidence, "hybrid_search", fake_search)
     requirements = [{"name": "Python", "source_quote": "Python", "quote_verified": True}]
     results = evidence.retrieve_evidence(requirements, CHUNKS, per_requirement=2,
                                          skip_sections=("summary",))
-    assert results[0]["evidence_ids"] == ["experience_1", "experience_2"]
+    assert results[0]["candidate_ids"] == ["experience_1", "experience_2"]
 
 def test_collected_evidence_has_each_bullet_once_in_resume_order():
     requirements = [
-        {"evidence_ids": ["experience_2", "summary_1"]},
-        {"evidence_ids": ["summary_1", "education_1"]},
+        {"candidate_ids": ["experience_2", "summary_1"]},
+        {"candidate_ids": ["summary_1", "education_1"]},
     ]
     collected = evidence.collect_evidence(requirements, CHUNKS)
     assert [chunk["id"] for chunk in collected] == ["summary_1", "experience_2", "education_1"]

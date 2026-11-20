@@ -15,9 +15,9 @@ def retrieve_evidence(requirements: list[dict], chunks: list[dict],
     results = []
     for requirement in requirements:
         ranked = hybrid_search(requirement_query(requirement), searchable, top_k=per_requirement)
-        results.append({**requirement, "evidence_ids": [chunk["id"] for chunk in ranked]})
+        results.append({**requirement, "candidate_ids": [chunk["id"] for chunk in ranked]})
     return results
 
 def collect_evidence(requirements: list[dict], chunks: list[dict]) -> list[dict]:
-    wanted = {evidence_id for r in requirements for evidence_id in r["evidence_ids"]}
+    wanted = {evidence_id for r in requirements for evidence_id in r["candidate_ids"]}
     return [chunk for chunk in chunks if chunk["id"] in wanted]

@@ -27,3 +27,12 @@ class Requirement(BaseModel):
 class JobRequirements(BaseModel):
     job_title: str
     requirements: list[Requirement]
+    
+class RequirementVerdict(BaseModel):
+    requirement_id: str
+    verdict: Literal["met", "partial", "missing"]
+    evidence_ids: list[str] = Field(default_factory=list)
+    reason: str
+
+class VerdictReport(BaseModel):
+    verdicts: list[RequirementVerdict]

@@ -32,3 +32,6 @@ def rank_chunks_by_embedding(query: str, chunks: list[dict], top_k: int | None =
     ]
     ranked.sort(key=lambda chunk: chunk["embedding_score"], reverse=True)
     return ranked[:top_k] if top_k else ranked
+
+def warm_up() -> None:
+    _get_model()

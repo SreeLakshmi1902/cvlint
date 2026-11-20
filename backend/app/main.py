@@ -12,6 +12,9 @@ from app.llm_client import LLMOutputError, LLMProviderError
 from fastapi.middleware.cors import CORSMiddleware
 from app.evidence import retrieve_evidence, collect_evidence
 
+from contextlib import asynccontextmanager
+from app.embeddings import warm_up as warm_up_embeddings
+
 from timing import StepTimer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
@@ -24,10 +27,16 @@ LINE_READERS = {
 
 EVIDENCE_CHUNKS = 6
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    warm_up_embeddings()
+    yield
+
 app = FastAPI(
     title="CVlint API",
     description="Evidence-grounded job-fit analysis",
-    version="0.2.0"
+    version="0.2.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(

@@ -111,7 +111,7 @@ def generate_structured(prompt: str, schema: type[BaseModel], max_attempts: int 
         try:
             return schema.model_validate_json(content)
         except ValidationError as error:
-            logger.warning("llm=%s attempt=%d failed validation, retrying", label, attempt)
+            logger.warning("llm=%s attempt=%d failed validation (%s), retrying", label, attempt, error.errors()[0]["msg"])
             last_error = error
             messages += [
                 {"role": "assistant", "content": content},

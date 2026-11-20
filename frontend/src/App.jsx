@@ -132,6 +132,7 @@ function App() {
                 <th>Requirement</th>
                 <th>Importance</th>
                 <th>Status</th>
+                <th>Verdict</th>
                 <th>From the job description</th>
               </tr>
             </thead>
@@ -146,6 +147,11 @@ function App() {
                   <td>
                     <span className={`status status-${req.status}`}>{STATUS_LABELS[req.status]}</span>
                     {req.matched_as && req.matched_as !== req.name && ` (via ${req.matched_as})`}
+                  </td>
+                  <td>
+                    <span className={`status verdict-${req.verdict}`}>{req.verdict?.replace("_", " ")}</span>
+                    <br />
+                    <small>{req.verdict_reason}</small>
                   </td>
                   <td>
                     "{req.source_quote}"

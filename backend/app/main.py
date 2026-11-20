@@ -14,6 +14,7 @@ from app.evidence import retrieve_evidence, collect_evidence
 
 from contextlib import asynccontextmanager
 from app.embeddings import warm_up as warm_up_embeddings
+from app.verdict_agent import generate_verdicts
 
 from timing import StepTimer
 
@@ -92,6 +93,8 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
         with timer.step("retrieve_evidence"):
             requirements = retrieve_evidence(match_result["requirements"], chunks)
             evidence = collect_evidence(requirements, chunks)
+        with timer.step("generate_verdicts"):
+            requirements = generate_verdicts(requirements, evidence)
         with timer.step("generate_compact_critique"):
             critique = generate_compact_critique(job.job_title, match_result, evidence, sections)
         

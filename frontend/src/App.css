@@ -69,3 +69,23 @@
 .unverified {
   color: #b42318;
 }
+
+.verdict-met {
+  color: #1f7a4d;
+  background: rgba(31, 122, 77, 0.12);
+}
+
+.verdict-partial {
+  color: #b54708;
+  background: rgba(181, 71, 8, 0.12);
+}
+
+.verdict-missing {
+  color: #b42318;
+  background: rgba(180, 35, 24, 0.1);
+}
+
+.verdict-not_judged {
+  color: #667085;
+  background: rgba(102, 112, 133, 0.12);
+}

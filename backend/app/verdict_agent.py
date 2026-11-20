@@ -1,4 +1,6 @@
 from app.critique_agent import build_evidence_block
+from app.llm_client import generate_structured
+from app.schemas import VerdictReport
 
 MAX_VERDICT_EVIDENCE = 3
 
@@ -52,3 +54,8 @@ def attach_verdicts(report: dict, requirements: list[dict]) -> list[dict]:
         results.append({**requirement, "verdict": verdict["verdict"], "verdict_evidence": evidence,
                         "verdict_reason": verdict["reason"]})
     return results
+
+def generate_verdicts(requirements: list[dict], evidence_chunks: list[dict]) -> list[dict]:
+    prompt = build_verdict_prompt(requirements, evidence_chunks)
+    report = generate_structured(prompt, VerdictReport, label="generate_verdicts").model_dump()
+    return attach_verdicts(report, requirements)

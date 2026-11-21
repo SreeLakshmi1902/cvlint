@@ -7,7 +7,7 @@ from app.parser import extract_docx_lines, extract_pdf_lines, build_sections, ex
 from app.chunker import create_bullet_chunks
 from app.requirement_extractor import extract_requirements, verify_quotes
 from app.skill_matcher import match_requirements
-from app.critique_agent import generate_compact_critique
+from app.critique_agent import generate_critique
 from app.llm_client import LLMOutputError, LLMProviderError
 from fastapi.middleware.cors import CORSMiddleware
 from app.evidence import retrieve_evidence, collect_evidence
@@ -98,8 +98,8 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
         with timer.step("generate_verdicts"):
             requirements = generate_verdicts(requirements, evidence)
             requirements = apply_verdict_guardrails(requirements, {chunk["id"] for chunk in evidence})
-        with timer.step("generate_compact_critique"):
-            critique = generate_compact_critique(job.job_title, match_result, evidence, sections)
+        with timer.step("generate_critique"):
+            critique = generate_critique(job.job_title, requirements)
         
     except LLMOutputError as error:
         raise HTTPException(status_code=502, detail="The AI model returned an invalid response. Please try again") from error

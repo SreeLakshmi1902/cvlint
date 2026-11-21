@@ -17,6 +17,11 @@ class CompactCritique(BaseModel):
     weak_areas: list[CritiquePoint] = Field(max_length=3)
     recommendations: list[CompactRecommendation] = Field(min_length=3, max_length=3)
     
+class CritiqueSummary(BaseModel):
+    overall_match: Literal["strong", "moderate", "weak", "insufficient"]
+    summary: str
+    recommendations: list[CompactRecommendation] = Field(default_factory=list)
+    
 class Requirement(BaseModel):
     name: str
     alternatives: list[str] = Field(default_factory=list)

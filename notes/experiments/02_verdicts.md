@@ -25,3 +25,6 @@ Timing: verdict call 2.3 s (1878 in / 614 out tokens).
 - skill-specific years: count only roles whose bullets show the skill
 - "or a related field": a closely related degree counts as met
   Result: 8/8 verdicts match label 01, on two separate runs (stable).
+- Extraction sometimes splits "2+ years ... with Python" into Python + a separate
+  "2+ years of professional experience" requirement (same quote). Double-counts
+  the years gap; fix with a min_years field before step 8's score.

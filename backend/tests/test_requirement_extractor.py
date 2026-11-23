@@ -20,3 +20,10 @@ def test_invented_quote_is_not_verified():
 def test_case_and_spacing_differences_are_ignored():
     result = verify_quotes(make_job("PROFESSIONAL   experience with python"), JD)
     assert result[0]["quote_verified"] is True
+    
+def test_unicode_dashes_and_quotes_match_plain_ones():
+    job = JobRequirements(job_title="x", requirements=[Requirement(
+        name="GitHub", category="technical", importance="must_have",
+        source_quote="Hands\u2011on experience with \u201cGitHub\u201d")])
+    result = verify_quotes(job, 'Hands-on experience with "GitHub".')
+    assert result[0]["quote_verified"]

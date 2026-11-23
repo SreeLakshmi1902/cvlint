@@ -31,3 +31,8 @@ def test_requirement_without_a_verdict_is_marked_not_judged():
     report = {"verdicts": [{"requirement_id": "req_1", "verdict": "met", "evidence_ids": [], "reason": "x"}]}
     results = attach_verdicts(report, REQUIREMENTS)
     assert results[1]["verdict"] == "not_judged"
+    
+def test_min_years_is_shown_to_the_verdict_model():
+    requirement = {**REQUIREMENTS[0], "min_years": 2.0}
+    line = build_requirement_lines([requirement])
+    assert "(must have, at least 2 years)" in line

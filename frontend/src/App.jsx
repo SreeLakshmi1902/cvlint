@@ -142,6 +142,7 @@ function App() {
                   <td>
                     {req.name}
                     {req.alternatives.length > 0 && ` (or ${req.alternatives.join(", ")})`}
+                    {req.min_years && ` (${req.min_years}+ years)`}
                   </td>
                   <td>{req.importance === "must_have" ? "Must have" : "Nice to have"}</td>
                   <td>

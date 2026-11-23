@@ -16,6 +16,7 @@ class Requirement(BaseModel):
     alternatives: list[str] = Field(default_factory=list)
     category: Literal["technical", "domain", "soft_skill", "qualification", "experience"]
     importance: Literal["must_have", "nice_to_have"]
+    min_years: float | None = None
     source_quote: str
 
 class JobRequirements(BaseModel):

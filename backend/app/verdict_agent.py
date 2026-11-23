@@ -30,8 +30,9 @@ def build_requirement_lines(requirements: list[dict]) -> str:
     lines = []
     for number, r in enumerate(requirements, start=1):
         importance = r["importance"].replace("_", " ")
+        years = f", at least {r['min_years']:g} years" if r.get("min_years") else ""
         candidates = ", ".join(r["candidate_ids"])
-        lines.append(f'- req_{number}: {r["name"]} ({importance}): "{r["source_quote"]}" | candidates: {candidates}')
+        lines.append(f'- req_{number}: {r["name"]} ({importance}{years}): "{r["source_quote"]}" | candidates: {candidates}')
     return "\n".join(lines)
 
 def build_verdict_prompt(requirements: list[dict], evidence_chunks: list[dict]) -> str:

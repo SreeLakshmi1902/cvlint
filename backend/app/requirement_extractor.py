@@ -5,10 +5,13 @@ EXTRACTION_PROMPT = """You extract candidate requirements from a job description
 
 Rules:
 - Create one requirement per distinct skill, technology, qualification or kind of experience.
-- "name" must be short, as it would appear on a resume: "Python", "RAG", "Docker", "Stakeholder communication". Never a full sentence.
+- "name" must be short, as it would appear on a resume: "Python", "RAG", "Docker", "Communication". Never a full sentence.
 - Use the bare technology name without extra words: "RAG" not "RAG pipelines", "Python" not "Python programming", "AWS" not "AWS services".
-- Split combined items: "Python and SQL" becomes two requirements.
 - When the job accepts alternatives ("AWS, Azure or GCP"), create one requirement with name "AWS" and alternatives ["Azure", "GCP"].
+- "and" or a list without "or" means each item is required separately: "Docker and Kubernetes" becomes two requirements. Only "or" creates alternatives.
+- Items listed under a heading such as "Nice to have", "Preferred" or "Bonus" are nice_to_have, even if the line itself does not say so.
+- If a line states years of experience with a skill ("2+ years of Python"), set min_years on that skill's requirement (2) and do not create a separate requirement for the years.
+- Split distinct technologies into separate requirements, but keep general practices or qualities listed together as one requirement ("testing, security and maintainability" is one requirement). Do not create a requirement that repeats another one.
 - category: "technical" for languages, frameworks, tools, platforms and techniques; "domain" for industry knowledge; "soft_skill"; "qualification" for degrees and certifications; "experience" for years or kinds of experience.
 - importance: "nice_to_have" when the text says preferred, desirable, bonus, a plus or similar; otherwise "must_have".
 - Technologies named in the responsibilities count as requirements.
@@ -23,8 +26,14 @@ def extract_requirements(job_description: str) -> JobRequirements:
     prompt = EXTRACTION_PROMPT.format(job_description=job_description)
     return generate_structured(prompt, JobRequirements, label="extract_requirements")
 
+CHARACTER_MAP = str.maketrans({
+    "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-", "\u2212": "-",
+    "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
+    "\u00a0": " ",
+})
+
 def normalize_text(text: str) -> str:
-    return " ".join(text.lower().split())
+    return " ".join(text.translate(CHARACTER_MAP).lower().split())
 
 def verify_quotes(job: JobRequirements, job_description: str) -> list[dict]:
     jd = normalize_text(job_description)

@@ -118,7 +118,12 @@ function App() {
           <br/>
           <h2>Analysis Results</h2>
           <br/>
-          <p><strong>Technical coverage:</strong> {result.score ?? "N/A"}{result.score !== null && "%"}</p>
+          <p><strong>Match score:</strong> {result.score ?? "N/A"}{result.score !== null && "%"}</p>
+          <p>
+            {result.verdict_counts.met} met · {result.verdict_counts.partial} partial · {result.verdict_counts.missing} missing
+            {result.verdict_counts.not_judged > 0 && ` · ${result.verdict_counts.not_judged} not judged`}
+          </p>
+          <p><small>Keyword coverage of technical requirements: {result.technical_coverage ?? "N/A"}%</small></p>
           <p>
             <strong>Overall Match:</strong> {result.llm_critique.overall_match}
           </p>

@@ -1,8 +1,6 @@
 import os
 import logging
-
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-
 from app.parser import extract_docx_lines, extract_pdf_lines, build_sections, extract_skill_list
 from app.chunker import create_bullet_chunks
 from app.requirement_extractor import extract_requirements, verify_quotes
@@ -11,14 +9,12 @@ from app.critique_agent import generate_critique
 from app.llm_client import LLMOutputError, LLMProviderError
 from fastapi.middleware.cors import CORSMiddleware
 from app.evidence import retrieve_evidence, collect_evidence
-
 from app.guardrails import apply_verdict_guardrails
-
 from contextlib import asynccontextmanager
 from app.embeddings import warm_up as warm_up_embeddings
 from app.verdict_agent import generate_verdicts
-
 from timing import StepTimer
+from app.scoring import verdict_score
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
 
@@ -98,8 +94,10 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
         with timer.step("generate_verdicts"):
             requirements = generate_verdicts(requirements, evidence)
             requirements = apply_verdict_guardrails(requirements, {chunk["id"] for chunk in evidence})
+        with timer.step("score"):
+            score = verdict_score(requirements)
         with timer.step("generate_critique"):
-            critique = generate_critique(job.job_title, requirements)
+            critique = generate_critique(job.job_title, requirements,score)
         
     except LLMOutputError as error:
         raise HTTPException(status_code=502, detail="The AI model returned an invalid response. Please try again") from error
@@ -112,7 +110,9 @@ def parse_resume(resume: UploadFile = File(...),job_desc: str = Form(...)):
     return {
         "filename": resume.filename,
         "job_title": job.job_title,
-        "score": match_result["technical_coverage"],
+        "score": score["score"],
+        "verdict_counts": score["counts"],
+        "technical_coverage": match_result["technical_coverage"],
         "matched_skills":match_result["matched"],
         "missing_skills":match_result["missing"],
         "needs_review": match_result["needs_review"],

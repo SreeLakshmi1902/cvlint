@@ -24,6 +24,7 @@ Rules:
 - For years of experience with a specific skill, count only roles whose bullets show that skill; total career length is not the same as experience with one skill.
 - If a requirement accepts "a related field", a degree in a closely related field (for example software engineering, artificial intelligence or IT for computer science) counts as met.
 - The summary is the candidate's own claim; prefer experience, project and education bullets.
+- "Professional" or "commercial" experience counts only work roles, not education or personal projects.
 """
 
 def build_requirement_lines(requirements: list[dict]) -> str:

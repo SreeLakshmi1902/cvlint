@@ -12,12 +12,12 @@ def build_evidence_block(chunks: list[dict]) -> str:
 SUMMARY_PROMPT = """You are a technical recruiter. A resume has already been checked against each job requirement. The verdicts below are final and were verified against resume evidence.
 
 JOB TITLE: {job_title}
+OVERALL MATCH (computed from the verdicts): {overall_match} ({score}%)
 
 VERDICTS:
 {verdicts}
 
 Write:
-- overall_match: strong, moderate, weak or insufficient.
 - summary: 2 sentences that agree with the verdicts.
 - recommendations: the 3 most useful actions, priorities 1 to 3. action and why are one sentence each.
 
@@ -49,8 +49,8 @@ def derive_points(requirements: list[dict]) -> tuple[list[dict], list[dict]]:
                                "evidence_ids": r["verdict_evidence"]})
     return strengths, weak_areas
 
-def generate_critique(job_title: str, requirements: list[dict]) -> dict:
-    prompt = SUMMARY_PROMPT.format(job_title=job_title, verdicts=build_verdict_lines(requirements))
+def generate_critique(job_title: str, requirements: list[dict], score: dict) -> dict:
+    prompt = SUMMARY_PROMPT.format(job_title=job_title, overall_match=score["overall_match"], score=score["score"],verdicts=build_verdict_lines(requirements))
     summary = generate_structured(prompt, CritiqueSummary, label="generate_critique").model_dump()
     strengths, weak_areas = derive_points(requirements)
     recommendations, recommendation_notes = check_recommendations(summary["recommendations"], requirements)
@@ -60,7 +60,7 @@ def generate_critique(job_title: str, requirements: list[dict]) -> dict:
         rec["priority"] = priority
         
     return {
-        "overall_match": summary["overall_match"],
+        "overall_match": score["overall_match"],
         "summary": summary["summary"],
         "strengths": strengths,
         "weak_areas": weak_areas,

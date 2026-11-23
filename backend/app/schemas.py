@@ -7,7 +7,6 @@ class CompactRecommendation(BaseModel):
     why: str
         
 class CritiqueSummary(BaseModel):
-    overall_match: Literal["strong", "moderate", "weak", "insufficient"]
     summary: str
     recommendations: list[CompactRecommendation] = Field(default_factory=list)
     

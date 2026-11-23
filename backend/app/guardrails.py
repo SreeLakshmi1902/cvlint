@@ -1,3 +1,32 @@
+import re
+
+from app.skill_matcher import appears_in_text, text_forms
+
+CLAIM_WORDS = re.compile(r"\b(add|adding|list|listing|include|including|mention|highlight|highlighting|emphasi[sz]e|claim)\b")
+LEARN_WORDS = re.compile(r"\b(build|building|learn|learning|create|develop|complete|take|enrol|enroll|practi[sc]e|project|course|certification|study)\b")
+
+def missing_skill_forms(requirements: list[dict]) -> dict[str, set[str]]:
+    forms = {}
+    for r in requirements:
+        if r["verdict"] == "missing":
+            for option in [r["name"], *r.get("alternatives", [])]:
+                forms[option] = text_forms(option)
+    return forms
+
+def check_recommendations(recommendations: list[dict], requirements: list[dict]) -> tuple[list[dict], list[str]]:
+    forms_by_skill = missing_skill_forms(requirements)
+    kept, notes = [], []
+    for rec in recommendations:
+        text = f"{rec['action']} {rec['why']}".lower()
+        mentioned = [skill for skill, forms in forms_by_skill.items()
+                     if any(appears_in_text(form, text) for form in forms)]
+        if mentioned and CLAIM_WORDS.search(text) and not LEARN_WORDS.search(text):
+            notes.append(f"Removed a recommendation to add or highlight missing skills "
+                         f"({', '.join(mentioned)}): {rec['action']}")
+            continue
+        kept.append(rec)
+    return kept, notes
+
 def validate_citations(requirement: dict, shown_ids: set[str]) -> dict:
     valid = [e for e in requirement["verdict_evidence"] if e in shown_ids]
     invalid = [e for e in requirement["verdict_evidence"] if e not in shown_ids]

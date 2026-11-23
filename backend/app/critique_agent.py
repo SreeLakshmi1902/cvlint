@@ -1,5 +1,6 @@
 from app.llm_client import generate_structured
 from app.schemas import CritiqueSummary
+from app.guardrails import check_recommendations
 
 def build_evidence_block(chunks: list[dict]) -> str:
     block = ""
@@ -22,7 +23,10 @@ Write:
 
 Rules:
 - Do not contradict the verdicts. A "met" requirement is a strength, never a gap.
+- Describe a "partial" requirement as partly met, not as missing.
+- Each recommendation must be a concrete action the candidate can complete in the next few months, such as learning a missing skill through a project or course, or making existing evidence clearer.
 - For a "missing" requirement, recommend learning it or building a project that uses it. Never recommend adding, listing or highlighting a skill the candidate does not have.
+- Do not recommend gaining years of experience, changing jobs, or work on requirements that are already met.
 - Prioritise must-have requirements over nice-to-have ones.
 """
 
@@ -49,10 +53,17 @@ def generate_critique(job_title: str, requirements: list[dict]) -> dict:
     prompt = SUMMARY_PROMPT.format(job_title=job_title, verdicts=build_verdict_lines(requirements))
     summary = generate_structured(prompt, CritiqueSummary, label="generate_critique").model_dump()
     strengths, weak_areas = derive_points(requirements)
+    recommendations, recommendation_notes = check_recommendations(summary["recommendations"], requirements)
+    recommendations = recommendations[:MAX_RECOMMENDATIONS]
+    
+    for priority, rec in enumerate(recommendations, start=1):
+        rec["priority"] = priority
+        
     return {
         "overall_match": summary["overall_match"],
         "summary": summary["summary"],
         "strengths": strengths,
         "weak_areas": weak_areas,
-        "recommendations": summary["recommendations"][:MAX_RECOMMENDATIONS],
+        "recommendations": recommendations,
+        "recommendation_notes": recommendation_notes
     }

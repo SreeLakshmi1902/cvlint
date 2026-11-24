@@ -11,10 +11,11 @@ Rules:
 - "and" or a list without "or" means each item is required separately: "Docker and Kubernetes" becomes two requirements. Only "or" creates alternatives.
 - Items listed under a heading such as "Nice to have", "Preferred" or "Bonus" are nice_to_have, even if the line itself does not say so.
 - If a line states years of experience with a skill ("2+ years of Python"), set min_years on that skill's requirement (2) and do not create a separate requirement for the years.
-- Split distinct technologies into separate requirements, but keep general practices or qualities listed together as one requirement ("testing, security and maintainability" is one requirement). Do not create a requirement that repeats another one.
+- Named technologies, tools and techniques are always separate requirements, even in one phrase: "building RAG pipelines and working with vector databases" gives "RAG" and "Vector databases". Only general practices or qualities listed together stay as one requirement ("testing, security and maintainability"). Do not create a requirement that repeats another one.
 - category: "technical" for languages, frameworks, tools, platforms and techniques; "domain" for industry knowledge; "soft_skill"; "qualification" for degrees and certifications; "experience" for years or kinds of experience.
 - importance: "nice_to_have" when the text says preferred, desirable, bonus, a plus or similar; otherwise "must_have".
-- Technologies named in the responsibilities count as requirements.
+- Take requirements mainly from sections that describe the candidate ("Requirements", "What you'll bring", "About you"). From responsibilities, add only named technologies or tools that are not already listed.
+- Never use a generic word on its own as a requirement name, such as "software", "secure" or "controls".
 - source_quote must be copied exactly from the job description.
 - Do not include benefits, company information, or anything the job description does not state.
 

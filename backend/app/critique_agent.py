@@ -28,6 +28,7 @@ Rules:
 - For a "missing" requirement, recommend learning it or building a project that uses it. Never recommend adding, listing or highlighting a skill the candidate does not have.
 - Do not recommend gaining years of experience, changing jobs, or work on requirements that are already met.
 - Prioritise must-have requirements over nice-to-have ones.
+- For a "partial" requirement about years of experience, recommend a project that deepens the skill, never reaching a number of years or editing the resume.
 """
 
 MAX_RECOMMENDATIONS = 3

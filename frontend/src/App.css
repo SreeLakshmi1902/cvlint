@@ -94,3 +94,28 @@
   color: #6941c6;
   background: rgba(105, 65, 198, 0.12);
 }
+
+.evidence-toggle,
+.all-evidence {
+  margin-top: 6px;
+}
+
+.evidence-toggle summary,
+.all-evidence summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.all-evidence {
+  margin-top: 32px;
+}
+
+.critique-list {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.critique-list li {
+  margin: 6px 0;
+}

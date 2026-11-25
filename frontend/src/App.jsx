@@ -7,26 +7,34 @@ const STATUS_LABELS = {
   needs_review: "Needs review",
 }
 
-function CritiquePoints({ items, evidenceById }) {
+function sourceLabel(chunk) {
+  if (chunk.context) return chunk.context
+  return chunk.section.charAt(0).toUpperCase() + chunk.section.slice(1)
+}
+
+function EvidenceToggle({ ids, evidenceById }) {
+  const chunks = (ids || []).map((id) => evidenceById[id]).filter(Boolean)
+  if (chunks.length === 0) return null
+  return (
+    <details className="evidence-toggle">
+      <summary>Evidence ({chunks.length})</summary>
+      {chunks.map((chunk, index) => (
+        <div key={`${chunk.id}-${index}`} className="evidence">
+          <p><strong>{sourceLabel(chunk)}</strong></p>
+          <p>{chunk.text}</p>
+        </div>
+      ))}
+    </details>
+  )
+}
+
+function CritiquePoints({ items }) {
   if (items.length === 0) return <p><em>None identified.</em></p>
-  return items.map((item, index) => (
-    <div key={index} className="critique-point">
-      <p>{item.point}</p>
-      {item.evidence_ids.map((id, idIndex) => {
-        const bullet = evidenceById[id]
-        return (
-          <div key={`${id}-${idIndex}`} className="evidence">
-            <p>
-              <strong className="evidence-id">[{id}]</strong>{" "}
-              {bullet
-                ? bullet.text
-                : <em className="unverified">Not among the bullets shown to the model</em>}
-            </p>
-          </div>
-        )
-      })}
-    </div>
-  ))
+  return (
+    <ul className="critique-list">
+      {items.map((item, index) => <li key={index}>{item.point}</li>)}
+    </ul>
+  )
 }
 
 function App() {
@@ -158,6 +166,10 @@ function App() {
                     <span className={`status verdict-${req.verdict}`}>{req.verdict?.replace("_", " ")}</span>
                     <br />
                     <small>{req.verdict_reason}</small>
+                    <EvidenceToggle ids={req.verdict_evidence} evidenceById={evidenceById} />
+                    {req.guardrail_notes?.length > 0 && (
+                      <small className="unverified"> {req.guardrail_notes.join(" ")}</small>
+                    )}
                   </td>
                   <td>
                     "{req.source_quote}"
@@ -168,10 +180,10 @@ function App() {
             </tbody>
           </table>
           <h3>Strengths</h3>
-          <CritiquePoints items={result.llm_critique.strengths} evidenceById={evidenceById} />
+          <CritiquePoints items={result.llm_critique.strengths} />
 
           <h3>Weak areas</h3>
-          <CritiquePoints items={result.llm_critique.weak_areas} evidenceById={evidenceById} />
+          <CritiquePoints items={result.llm_critique.weak_areas} />
 
           <h3>Recommendations</h3>
           {result.llm_critique.recommendations.map((item, index) => (
@@ -181,17 +193,15 @@ function App() {
             </div>
           ))}
           
-          <h3>Resume evidence used</h3>
-          <p><strong>The critique was based on these resume bullets, found by searching the resume for each requirement.</strong></p>
-          <br/>
-          {result.evidence.map((item) => (
-            <div key={item.id} className="evidence">
-              <p>
-                <strong className="evidence-id">[{item.id}]</strong> {item.context && <em>{item.context}</em>}
-              </p>
-              <p>{item.text}</p>
-            </div>
-          ))}
+          <details className="all-evidence">
+            <summary>All resume bullets searched ({result.evidence.length})</summary>
+            {result.evidence.map((item) => (
+              <div key={item.id} className="evidence">
+                <p><strong>{sourceLabel(item)}</strong></p>
+                <p>{item.text}</p>
+              </div>
+            ))}
+          </details>
         </div>
       )}
     </div>
